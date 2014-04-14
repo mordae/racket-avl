@@ -24,6 +24,7 @@
     (avl-pop-max (-> avl? (values any/c avl?)))
     (avl-pop-max! (-> avl? any/c))
     (avl-empty? (-> avl? boolean?))
+    (avl-contains? (-> avl? any/c boolean?))
     (in-avl (-> avl? sequence?))
     (in-avl/reverse (-> avl? sequence?))))
 
@@ -292,6 +293,30 @@
           (rebalance (make-node left right value))))))
 
     (else (raise #f))))
+
+
+;; Determine whether the tree contains specified value.
+(define (avl-contains? tree value)
+  (match tree
+    ((avl <=? root)
+     (contains? <=? root value))))
+
+
+;; Return boolean value indicating presence of the needle in node tree.
+(define (contains? <=? parent needle)
+  (match parent
+    ((node left right value _)
+     (cond
+       ((equal? value needle)
+        (values #t))
+
+       ((<=? value needle)
+        (contains? <=? left needle))
+
+       (else
+        (contains? <=? right needle))))
+
+    (else #f)))
 
 
 ;; Create ordered value sequence.
