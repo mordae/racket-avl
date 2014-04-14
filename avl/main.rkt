@@ -13,6 +13,7 @@
 (provide
   (contract-out
     (make-avl (-> (-> any/c any/c boolean?) avl?))
+    (avl-copy (-> avl? avl?))
     (avl-insert (-> avl? any/c avl?))
     (avl-insert! (-> avl? any/c void?))
     (avl-remove (-> avl? any/c avl?))
@@ -48,6 +49,14 @@
 ;; Determine whether is the AVL tree empty or not.
 (define (avl-empty? tree)
   (not (avl-root tree)))
+
+
+;; Create copy of the AVL tree.
+;; Pretty cheap since nodes are immutable.
+(define (avl-copy tree)
+  (match tree
+    ((avl <=? root)
+     (avl <=? root))))
 
 
 ;; Create new tree including given value.
