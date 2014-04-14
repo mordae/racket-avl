@@ -24,7 +24,8 @@
     (avl-pop-max (-> avl? (values any/c avl?)))
     (avl-pop-max! (-> avl? any/c))
     (avl-empty? (-> avl? boolean?))
-    (in-avl (-> avl? sequence?))))
+    (in-avl (-> avl? sequence?))
+    (in-avl/reverse (-> avl? sequence?))))
 
 
 ;; Wrapper to hide AVL tree nodes from the user.
@@ -302,6 +303,19 @@
          (iterate left)
          (yield value)
          (iterate right))
+
+        (else #t)))))
+
+
+;; Create reverse ordered value sequence.
+(define (in-avl/reverse tree)
+  (in-generator
+    (let iterate ((parent (avl-root tree)))
+      (match parent
+        ((node left right value _)
+         (iterate right)
+         (yield value)
+         (iterate left))
 
         (else #t)))))
 
