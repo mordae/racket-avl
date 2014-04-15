@@ -26,6 +26,7 @@
     (avl-pop-max! (-> avl? any/c))
     (avl-empty? (-> avl? boolean?))
     (avl-contains? (-> avl? any/c boolean?))
+    (avl->list (-> avl? list?))
     (in-avl (-> avl? sequence?))
     (in-avl/reverse (-> avl? sequence?))))
 
@@ -352,6 +353,11 @@
          (iterate left))
 
         (else #t)))))
+
+
+;; Convert the tree to a list.
+(define (avl->list tree)
+  (for/list ((x (in-avl tree))) x))
 
 
 ; vim:set ts=2 sw=2 et:
