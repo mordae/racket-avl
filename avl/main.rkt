@@ -320,7 +320,7 @@
        ((equal? value needle)
         (values #t))
 
-       ((<=? value needle)
+       ((<=? needle value)
         (contains? <=? left needle))
 
        (else
