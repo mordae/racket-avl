@@ -24,20 +24,26 @@ elements from the middle.
 
 @section{Creating Trees}
 
-@defproc[(make-avl (<=? (-> any/c any/c boolean?))) avl?]{
+@deftogether[(@defproc[(make-avl (<=? procedure?)) avl?]
+              @defproc[(make-avleq (<=? procedure?)) avl?]
+              @defproc[(make-avleqv (<=? procedure?)) avl?])]{
   Create new tree using specified comparator function.
 
+  Like hash tables, every AVL tree variant uses a different equality
+  predicate.  @racket[make-avl] uses @racket[equal?], @racket[make-avleq]
+  uses @racket[eq?] and @racket[make-avleqv] uses @racket[eqv?].
+
   Tree with @racket[number?] elements would use @racket[<=] as the comparator,
-  trees with @racket[string?] elements would use @racket[string<=?] and so on.
+  tree with @racket[string?] elements would use @racket[string<=?] and so on.
 
   @examples[#:eval avl-eval
-    (define tree (make-avl <=))
+    (define tree (make-avleqv <=))
     (avl-insert! tree 42)
   ]
 }
 
 @defproc[(avl-copy (tree avl?)) avl?]{
-  Copy the tree container, effectively creating a standalone copy of tree
+  Copy the tree container, effectively creating a standalone tree that is
   decoupled from the original.
 
   @examples[#:eval avl-eval
@@ -56,6 +62,18 @@ elements from the middle.
     (avl? tree)
     (avl? copy)
     (avl? 'something-else)
+  ]
+}
+
+@deftogether[(@defproc[(avl-equal? (v any/c)) boolean?]
+              @defproc[(avl-eqv? (v any/c)) boolean?]
+              @defproc[(avl-eq? (v any/c)) boolean?])]{
+  Predicates for trees created using respective constructors above.
+
+  @examples[#:eval avl-eval
+    (avl-equal? tree)
+    (avl-eqv? tree)
+    (avl-eq? tree)
   ]
 }
 

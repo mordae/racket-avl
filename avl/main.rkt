@@ -13,6 +13,8 @@
 (provide
   (contract-out
     (make-avl (-> (-> any/c any/c boolean?) avl?))
+    (make-avleq (-> (-> any/c any/c boolean?) avl?))
+    (make-avleqv (-> (-> any/c any/c boolean?) avl?))
     (avl-copy (-> avl? avl?))
     (avl-insert (-> avl? any/c avl?))
     (avl-insert! (-> avl? any/c void?))
@@ -25,6 +27,9 @@
     (avl-pop-max (-> avl? (values any/c avl?)))
     (avl-pop-max! (-> avl? any/c))
     (avl-empty? (-> avl? boolean?))
+    (avl-equal? (-> any/c boolean?))
+    (avl-eqv? (-> any/c boolean?))
+    (avl-eq? (-> any/c boolean?))
     (avl-contains? (-> avl? any/c boolean?))
     (avl->list (-> avl? list?))
     (in-avl (-> avl? sequence?))
@@ -34,17 +39,50 @@
 ;; Wrapper to hide AVL tree nodes from the user.
 ;; Possibly mutable, unlike the individual nodes.
 (struct avl
-  ((<=?)
-   (root #:mutable)))
+  (<=? =? (root #:mutable)))
 
 ;; An immutable tree node.
 (struct node
   (left right value height))
 
 
-;; Create an empty tree with specified comparator.
+;; Create an empty tree with specified comparator,
+;; that determines two values are identical using equal?.
 (define (make-avl <=?)
-  (avl <=? #f))
+  (avl <=? equal? #f))
+
+
+;; Create an empty tree with specified comparator,
+;; that determines two values are identical using eq?.
+(define (make-avleq <=?)
+  (avl <=? eq? #f))
+
+
+;; Create an empty tree with specified comparator,
+;; that determines two values are identical using eqv?.
+(define (make-avleqv <=?)
+  (avl <=? eqv? #f))
+
+
+;; Determine whether the value is an AVL tree have been
+;; created using `make-avl`.
+(define (avl-equal? v)
+  (and (avl? v)
+       (eq? equal? (avl-=? v))))
+
+
+;; Determine whether the value is an AVL tree have been
+;; created using `make-avleqv`.
+(define (avl-eqv? v)
+  (and (avl? v)
+       (eq? eqv? (avl-=? v))))
+
+
+;; Determine whether the value is an AVL tree have been
+;; created using `make-avleq`.
+(define (avl-eq? v)
+  (and (avl? v)
+       (eq? eq? (avl-=? v))))
 
 
 ;; Determine whether is the AVL tree empty or not.
@@ -56,21 +94,21 @@
 ;; Pretty cheap since nodes are immutable.
 (define (avl-copy tree)
   (match tree
-    ((avl <=? root)
-     (avl <=? root))))
+    ((avl <=? =? root)
+     (avl <=? =? root))))
 
 
 ;; Create new tree including given value.
 (define (avl-insert tree value)
   (match tree
-    ((avl <=? root)
-     (avl <=? (insert <=? root value)))))
+    ((avl <=? =? root)
+     (avl <=? =? (insert <=? root value)))))
 
 
 ;; Modify an existing tree to include given value.
 (define (avl-insert! tree value)
   (match tree
-    ((avl <=? root)
+    ((avl <=? _ root)
      (set-avl-root! tree (insert <=? root value)))))
 
 
@@ -154,20 +192,20 @@
 ;; Return minimal (leftmost) value in the tree.
 (define (avl-min tree)
   (match tree
-    ((avl _ #f)
+    ((avl _ _ #f)
      (error 'avl-min "empty tree"))
 
-    ((avl _ root)
+    ((avl _ _ root)
      (leftmost root))))
 
 
 ;; Return maximal (rightmost) value in the tree.
 (define (avl-max tree)
   (match tree
-    ((avl _ #f)
+    ((avl _ _ #f)
      (error 'avl-min "empty tree"))
 
-    ((avl _ root)
+    ((avl _ _ root)
      (rightmost root))))
 
 
@@ -175,7 +213,7 @@
 (define (leftmost parent)
   (match parent
     ((node #f _ value _)
-     (values value))
+     (begin value))
 
     ((node left _ _ _)
      (leftmost left))))
@@ -185,7 +223,7 @@
 (define (rightmost parent)
   (match parent
     ((node _ #f value _)
-     (values value))
+     (begin value))
 
     ((node _ right _ _)
      (rightmost right))))
@@ -194,24 +232,24 @@
 ;; Return tree's minimal item and a new tree without it.
 (define (avl-pop-min tree)
   (match tree
-    ((avl _ #f)
+    ((avl _ _ #f)
      (error 'avl-pop-min "empty tree"))
 
-    ((avl <=? root)
+    ((avl <=? =? root)
      (let-values (((value new-root) (pop-min root)))
-       (values value (avl <=? new-root))))))
+       (values value (avl <=? =? new-root))))))
 
 
 ;; Remove tree's minimal item and return it.
 (define (avl-pop-min! tree)
   (match tree
-    ((avl _ #f)
+    ((avl _ _ #f)
      (error 'avl-pop-min! "empty tree"))
 
-    ((avl _ root)
+    ((avl _ _ root)
      (let-values (((value new-root) (pop-min root)))
        (set-avl-root! tree new-root)
-       (values value)))))
+       (begin value)))))
 
 
 ;; Recursively rebuild nodes without the leftmost node,
@@ -229,24 +267,24 @@
 ;; Return tree's maximal item and a new tree without it.
 (define (avl-pop-max tree)
   (match tree
-    ((avl _ #f)
+    ((avl _ _ #f)
      (error 'avl-pop-max "empty tree"))
 
-    ((avl <=? root)
+    ((avl <=? =? root)
      (let-values (((value new-root) (pop-max root)))
-       (values value (avl <=? new-root))))))
+       (values value (avl <=? =? new-root))))))
 
 
 ;; Remove tree's maximal item and return it.
 (define (avl-pop-max! tree)
   (match tree
-    ((avl _ #f)
+    ((avl _ _ #f)
      (error 'avl-pop-max! "empty tree"))
 
-    ((avl _ root)
+    ((avl _ _ root)
      (let-values (((value new-root) (pop-max root)))
        (set-avl-root! tree new-root)
-       (values value)))))
+       (begin value)))))
 
 
 ;; Recursively rebuild nodes without the rightmost node,
@@ -264,28 +302,28 @@
 ;; Return new AVL tree without specified value.
 (define (avl-remove tree value)
   (match tree
-    ((avl <=? root)
+    ((avl <=? =? root)
      (with-handlers ((boolean? (λ _ tree)))
-       (let ((new-root (remove-value <=? root value)))
-         (avl <=? new-root))))))
+       (let ((new-root (remove-value <=? =? root value)))
+         (avl <=? =? new-root))))))
 
 
 ;; Remove specified value from the AVL tree.
 (define (avl-remove! tree value)
   (match tree
-    ((avl <=? root)
+    ((avl <=? =? root)
      (with-handlers ((boolean? void))
-       (let ((new-root (remove-value <=? root value)))
+       (let ((new-root (remove-value <=? =? root value)))
          (set-avl-root! tree new-root))))))
 
 
 ;; Return node tree without specified target.
 ;; If the value is not present within the tree, raise #f.
-(define (remove-value <=? parent victim)
+(define (remove-value <=? =? parent victim)
   (match parent
     ((node left right value _)
      (cond
-       ((equal? victim value)
+       ((=? value victim)
         (cond
           ((and left right)
            (let-values (((value right) (pop-min right)))
@@ -295,11 +333,11 @@
            (or left right))))
 
        ((<=? victim value)
-        (let ((left (remove-value <=? left victim)))
+        (let ((left (remove-value <=? =? left victim)))
           (rebalance (make-node left right value))))
 
-       ((<=? value victim)
-        (let ((right (remove-value <=? right victim)))
+       (else
+        (let ((right (remove-value <=? =? right victim)))
           (rebalance (make-node left right value))))))
 
     (else (raise #f))))
@@ -308,23 +346,23 @@
 ;; Determine whether the tree contains specified value.
 (define (avl-contains? tree value)
   (match tree
-    ((avl <=? root)
-     (contains? <=? root value))))
+    ((avl <=? =? root)
+     (contains? <=? =? root value))))
 
 
-;; Return boolean value indicating presence of the needle in node tree.
-(define (contains? <=? parent needle)
+;; Return value corresponding to specified needle.
+(define (contains? <=? =? parent needle)
   (match parent
     ((node left right value _)
      (cond
-       ((equal? value needle)
-        (values #t))
+       ((=? value needle)
+        (begin #t))
 
        ((<=? needle value)
-        (contains? <=? left needle))
+        (contains? <=? =? left needle))
 
        (else
-        (contains? <=? right needle))))
+        (contains? <=? =? right needle))))
 
     (else #f)))
 
