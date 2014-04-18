@@ -38,7 +38,22 @@ elements from the middle.
 
   @examples[#:eval avl-eval
     (define tree (make-avleqv <=))
-    (avl-insert! tree 42)
+    (avl-add! tree 42)
+  ]
+}
+
+@defproc[(make-custom-avl (<=? procedure?) (=? procedure?)) avl?]{
+  Create new tree using both specified comparator function and
+  equality predicate.
+
+  @examples[#:eval avl-eval
+    (define custom-avl
+      (make-custom-avl (λ (x y) (<= (car x) (car y)))
+                       (λ (x y) (equal? (car x) (car y)))))
+    (avl-add! custom-avl (cons 1 'hello))
+    (avl-add! custom-avl (cons 2 'ciao))
+    (avl-add! custom-avl (cons 1 'bye))
+    (avl->list custom-avl)
   ]
 }
 
@@ -98,30 +113,27 @@ elements from the middle.
 
 @section{Manipulating Values}
 
-@defproc[(avl-insert (tree avl?) (value any/c)) avl?]{
+@defproc[(avl-add (tree avl?) (value any/c)) avl?]{
   Create new tree containing specified @racket[value].
-  Values can be added to the tree multiple times.
 
   @examples[#:eval avl-eval
-    (let ((new-tree (avl-insert tree 13)))
+    (let ((new-tree (avl-add tree 13)))
       (avl-contains? new-tree 13))
     (avl-contains? tree 13)
   ]
 }
 
-@defproc[(avl-insert! (tree avl?) (value any/c)) void?]{
-  Like @racket[avl-insert], but the container is modified in place.
+@defproc[(avl-add! (tree avl?) (value any/c)) void?]{
+  Like @racket[avl-add], but the container is modified in place.
 
   @examples[#:eval avl-eval
-    (avl-insert! tree 13)
+    (avl-add! tree 13)
     (avl-contains? tree 13)
   ]
 }
 
 @defproc[(avl-remove (tree avl?) (value any/c)) avl?]{
   Create new tree without the first instance of the @racket[value].
-  If the tree contains the @racket[value] multiple times, other
-  instances are left alone.
 
   @examples[#:eval avl-eval
     (let ((new-tree (avl-remove tree 13)))
@@ -146,7 +158,7 @@ elements from the middle.
   Find smallest (leftmost) value in the tree.
 
   @examples[#:eval avl-eval
-    (avl-insert! tree 21)
+    (avl-add! tree 21)
     (avl-min tree)
   ]
 }
@@ -155,7 +167,7 @@ elements from the middle.
   Find largest (rightmost) value in the tree.
 
   @examples[#:eval avl-eval
-    (avl-insert! tree 101)
+    (avl-add! tree 101)
     (avl-max tree)
   ]
 }

@@ -15,9 +15,11 @@
     (make-avl (-> (-> any/c any/c boolean?) avl?))
     (make-avleq (-> (-> any/c any/c boolean?) avl?))
     (make-avleqv (-> (-> any/c any/c boolean?) avl?))
+    (make-custom-avl (-> (-> any/c any/c boolean?)
+                         (-> any/c any/c boolean?) avl?))
     (avl-copy (-> avl? avl?))
-    (avl-insert (-> avl? any/c avl?))
-    (avl-insert! (-> avl? any/c void?))
+    (avl-add (-> avl? any/c avl?))
+    (avl-add! (-> avl? any/c void?))
     (avl-remove (-> avl? any/c avl?))
     (avl-remove! (-> avl? any/c void?))
     (avl-min (-> avl? any/c))
@@ -64,6 +66,11 @@
   (avl <=? eqv? #f))
 
 
+;; Create an empty tree with specified comparator and equality predicate.
+(define (make-custom-avl <=? =?)
+  (avl <=? =? #f))
+
+
 ;; Determine whether the value is an AVL tree have been
 ;; created using `make-avl`.
 (define (avl-equal? v)
@@ -99,30 +106,34 @@
 
 
 ;; Create new tree including given value.
-(define (avl-insert tree value)
+(define (avl-add tree value)
   (match tree
     ((avl <=? =? root)
-     (avl <=? =? (insert <=? root value)))))
+     (avl <=? =? (add <=? =? root value)))))
 
 
 ;; Modify an existing tree to include given value.
-(define (avl-insert! tree value)
+(define (avl-add! tree value)
   (match tree
-    ((avl <=? _ root)
-     (set-avl-root! tree (insert <=? root value)))))
+    ((avl <=? =? root)
+     (set-avl-root! tree (add <=? =? root value)))))
 
 
-;; Perform the non-modifying insertion of a value into the tree.
-(define (insert <=? parent new-value)
+;; Perform the non-modifying addition of a value into the tree.
+(define (add <=? =? parent new-value)
   (match parent
     ((node left right value height)
-     (rebalance
-       (cond
-         ((<=? new-value value)
-          (make-node (insert <=? left new-value) right value))
+     (cond
+       ((=? value new-value)
+        (make-node left right new-value))
 
-         (else
-          (make-node left (insert <=? right new-value) value)))))
+       ((<=? new-value value)
+        (rebalance
+          (make-node (add <=? =? left new-value) right value)))
+
+       (else
+        (rebalance
+          (make-node left (add <=? =? right new-value) value)))))
 
     (else
      (make-node #f #f new-value))))
