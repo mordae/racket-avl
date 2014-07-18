@@ -5,7 +5,6 @@
 
 (require racket/generator
          racket/contract
-         racket/stream
          racket/match)
 
 (provide avl?)
