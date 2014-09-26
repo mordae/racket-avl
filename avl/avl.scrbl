@@ -19,8 +19,8 @@ All mutations of the AVL tree create new nodes instead of modifying the
 data in place.  The imperative variants change the root node in place
 for convenience.  Mutating the tree is not thread-safe.
 
-These trees be used for as priority queues with possibility to remove
-elements from the middle.
+These trees could be used for as priority queues with possibility to
+remove elements from the middle.
 
 @section{Creating Trees}
 
