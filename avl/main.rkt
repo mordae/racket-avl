@@ -34,7 +34,9 @@
     (avl-contains? (-> avl? any/c boolean?))
     (avl->list (-> avl? list?))
     (in-avl (-> avl? sequence?))
-    (in-avl/reverse (-> avl? sequence?))))
+    (in-avl/reverse (-> avl? sequence?))
+    (avl-mirror (-> avl? avl?))
+    (avl-mirror! (-> avl? void?))))
 
 
 ;; Wrapper to hide AVL tree nodes from the user.
@@ -407,5 +409,24 @@
 (define (avl->list tree)
   (for/list ((x (in-avl tree))) x))
 
+
+;; Mirror the node children
+(define (mirror tree)
+  (match tree
+    [(node left right val _)
+     (make-node (mirror right) (mirror left) val)]
+    [else #f]))
+
+
+;; Mirror (invert) a new tree
+(define (avl-mirror tree)
+  (match tree
+    [(avl <=? =? root)
+     (avl <=? =? (mirror root))]))
+
+
+;; Mirror (invert) an existing tree
+(define (avl-mirror! tree)
+  (set-avl-root! tree (mirror (avl-root tree))))
 
 ; vim:set ts=2 sw=2 et:

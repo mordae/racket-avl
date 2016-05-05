@@ -151,6 +151,32 @@ remove elements from the middle.
   ]
 }
 
+@defproc[(avl-mirror [tree avl?]) avl?]{
+  Mirror (invert) a tree by swapping each left and right node.
+  Returns the mirrored tree.
+
+  @examples[#:eval avl-eval
+    (let ([new-tree (make-avl <)])
+      (avl-add! new-tree 55)
+      (avl-add! new-tree 10)
+      (avl-add! new-tree 99)
+      (avl->list (avl-mirror new-tree)))
+  ]
+}
+
+@defproc[(avl-mirror! [tree avl?]) void?]{
+  Like @racket[avl-mirror], but the container is modified in place.
+
+  @examples[#:eval avl-eval
+    (let ([new-tree (make-avl <)])
+      (avl-add! new-tree 55)
+      (avl-add! new-tree 10)
+      (avl-add! new-tree 99)
+      (avl-mirror! new-tree)
+      (avl->list new-tree))
+  ]
+}
+
 
 @section{Queue Usage}
 
