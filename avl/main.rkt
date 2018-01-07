@@ -32,6 +32,7 @@
     (avl-eqv? (-> any/c boolean?))
     (avl-eq? (-> any/c boolean?))
     (avl-contains? (-> avl? any/c boolean?))
+    (avl-search (-> avl? any/c any/c))
     (avl->list (-> avl? list?))
     (in-avl (-> avl? sequence?))
     (in-avl/reverse (-> avl? sequence?))))
@@ -374,6 +375,27 @@
        (else
         (contains? <=? =? right needle))))
 
+    (else #f)))
+
+;; Determine whether the tree contains specified value.
+;; Return the needle contained by the tree
+(define (avl-search tree value)
+  (match tree
+    ((avl <=? =? root)
+     (find <=? =? root value))))
+
+
+;; Return value corresponding to specified needle.
+(define (find <=? =? parent needle)
+  (match parent
+    ((node left right value _)
+     (cond
+       ((=? value needle)
+        (begin value))
+       ((<=? needle value)
+        (find <=? =? left needle))
+       (else
+         (find <=? =? right needle))))
     (else #f)))
 
 

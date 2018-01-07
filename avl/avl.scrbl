@@ -110,6 +110,27 @@ remove elements from the middle.
   ]
 }
 
+@defproc[(avl-search (tree avl?) (value any/c)) any/c?]{
+  Search the tree and return a needle corresponding 
+  to the specified @racket[value].  Return #f if none exist.
+
+  @examples[#:eval avl-eval
+    (define animal-dict
+      (make-custom-avl (λ (x y) (<= (car x) (car y)))
+                       (λ (x y) (equal? (car x) (car y)))))
+    (avl-add! animal-dict (cons 1 'cat))
+    (avl-add! animal-dict (cons 2 'dog))
+    (avl-add! animal-dict (cons 3 'mouse))
+    (avl->list animal-dict)
+
+    (define (search-by-key tree key)
+      (avl-search tree (cons key '())))
+    (search-by-key animal-dict 1)
+    (search-by-key animal-dict 2)
+    (search-by-key animal-dict 3)
+    (search-by-key animal-dict 4)
+  ]
+}
 
 @section{Manipulating Values}
 
